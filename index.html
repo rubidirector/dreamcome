@@ -504,9 +504,9 @@ const ownedSet=()=>new Set(S.rewards.map(r=>r.id));
 function pick(g,own){const pool=poolOf(g),fresh=pool.filter(i=>!own.has(i)),arr=fresh.length?fresh:pool;return arr[Math.floor(Math.random()*arr.length)]}
 const rimg=id=>`<img src="r${String(id).padStart(2,'0')}.webp" alt="${RB[id][1]}" loading="lazy">`;
 const reveal=list=>list.map(r=>`<figure>${rimg(r.id)}<span class="gb ${r.grade}">${r.grade}</span> ${RB[r.id][1]}</figure>`).join('');
-const gradeOf=pl=>pl>=40?'A':pl>=25?'B':pl>=10?'C':null;
+const gradeOf=pl=>pl>=40?'A':pl>=25?'B':pl>=10?'C':pl>=1?'D':null;const gradeR=g=>g==='D'?'C':g;
 function backfill(st){const r=[],days={};
-  st.sessions.forEach(s=>{if(s.done&&s.claimed!==false){const g=gradeOf(s.planned);if(g)r.push({date:s.date,grade:g})}days[s.date]=(days[s.date]||0)+s.min});
+  st.sessions.forEach(s=>{if(s.done&&s.claimed!==false){const g=gradeOf(s.planned);if(g)r.push({date:s.date,grade:gradeR(g)})}days[s.date]=(days[s.date]||0)+s.min});
   Object.keys(days).forEach(d=>{if(d!==T&&days[d]>=240)r.push({date:d,grade:'S'})});
   return r.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0)}
 
@@ -670,15 +670,15 @@ function chime(){
 function openSheet(l,t,sum,suggest){
   $('sheetL').textContent=l;$('sheetT').textContent=t;$('sheetSum').textContent=sum;
   {const g=pending&&pending.done&&gradeOf(pending.planned),tot=pending?minsOn(T)+pending.min>=240&&!S.claims['total:'+T]:false;
-   const msg=[g?`${g}등급 미션`:'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
-   $('sheetArt').innerHTML=`<p class="muted" style="margin:0">${msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'10분 이상 타이머를 끝까지 채우면 리워드 미션이 완료돼요.'}</p>`;}
+   const msg=[g?(g==='D'?'1분 미션':`${g}등급 미션`):'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
+   $('sheetArt').innerHTML=`<p class="muted" style="margin:0">${msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'타이머를 끝까지 채우면 리워드 미션이 완료돼요.'}</p>`;}
   $('saveSess').textContent='저장';
   $('suggestBtn').hidden=!suggest;$('suggestBtn').dataset.m=suggest||'';$('suggestBtn').textContent=`다음엔 ${suggest}분`;
   $('scrim').hidden=false;
 }
 function resetTimer(){started=false;running=false;remain=plan*60000;clearInterval(tick);
   $('startBtn').textContent='시작';$('finishBtn').disabled=true;$('clockSub').textContent='준비되면 시작을 눌러요';$('scrim').hidden=true;pending=null;renderPresets();draw()}
-function rewardsFor(p){const out=[],g=p.done&&gradeOf(p.planned);if(g)out.push(g);
+function rewardsFor(p){const out=[],g=p.done&&gradeOf(p.planned);if(g)out.push(gradeR(g));
   if(!S.rewards.some(r=>r.date===T&&r.grade==='S'&&r.src!=='rest')&&minsOn(T)+p.min>=240)out.push('S');return out}
 function commit(){if(pending){pending.claimed=false;S.sessions.push(pending);save()}$('task').value='';}
 $('discard').onclick=()=>{resetTimer()};
@@ -764,11 +764,11 @@ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
 const ODDS={1:{C:50,B:30,A:15,S:5},daily:{C:50,B:30,A:15,S:5},5:{C:20,B:40,A:30,S:10},10:{B:40,A:40,S:20},30:{A:50,S:50}};
 function roll(t){const o=ODDS[t];let x=Math.random()*100;for(const g of ['C','B','A','S']){if(!o[g])continue;if((x-=o[g])<0)return g}return 'S'}
 function onRest(){S.rests.push(T);save();$('bleft').textContent='마음 휴식 미션을 완료했어요. 리워드 탭에서 받아요.'}
-const MISSION={timer:{C:'C등급',B:'B등급',A:'A등급'},total:'S등급',1:'C~S등급 랜덤',5:'C~S등급 랜덤',10:'B~S등급 랜덤',30:'A~S등급 랜덤'};
+const MISSION={timer:{D:'C등급',C:'C등급',B:'B등급',A:'A등급'},total:'S등급',1:'C~S등급 랜덤',5:'C~S등급 랜덤',10:'B~S등급 랜덤',30:'A~S등급 랜덤'};
 let lastRid=null;
 function claim(key){
   let g=null;const [k,v]=key.split(':');
-  if(k==='timer'){const ck='timer:'+v+':'+T;if(S.claims[ck]||!S.sessions.some(x=>x.date===T&&x.done&&gradeOf(x.planned)===v))return;S.claims[ck]=1;g=v}
+  if(k==='timer'){const ck='timer:'+v+':'+T;if(S.claims[ck]||!S.sessions.some(x=>x.date===T&&x.done&&gradeOf(x.planned)===v))return;S.claims[ck]=1;g=gradeR(v)}
   else if(k==='total'){if(minsOn(T)<240||S.claims['total:'+T])return;S.claims['total:'+T]=1;g='S'}
   else if(k==='restd'){if(!S.rests.includes(T)||S.claims['restd:'+T])return;S.claims['restd:'+T]=1;g=roll('daily')}
   else if(k==='rest'){const m=+v;if(S.rests.length<m||S.claims['rest:'+m])return;S.claims['rest:'+m]=1;g=roll(m)}
@@ -788,13 +788,14 @@ function renderMissions(){
   const btn=(key,label)=>`<button class="claim" type="button" data-claim="${key}">${label}</button>`;
   const row=(done,t,grade,st,bar)=>`<li class="${done?'ok':''}"><span class="dot"></span><div class="mt">${t}<div class="ms"><span class="gtag">${grade}</span></div>${bar!=null?`<div class="pbar"><i style="width:${bar}%"></i></div>`:''}</div><span class="st">${st}</span></li>`;
   let h='<div class="mgroup">매일 미션 · 하루 한 번씩 받을 수 있어요</div><ul class="missions">';
-  [['C','10분 이상 타이머 완주'],['B','25분 이상 타이머 완주'],['A','40분 이상 타이머 완주']].forEach(([g,t])=>{
+  const best=Math.max(0,...S.sessions.filter(x=>x.date===T).map(x=>x.min));
+  [['D','1분 타이머 완주',1],['C','10분 이상 타이머 완주',10],['B','25분 이상 타이머 완주',25],['A','40분 이상 타이머 완주',40]].forEach(([g,t,m])=>{
     const td=S.sessions.some(x=>x.date===T&&x.done&&gradeOf(x.planned)===g),c=S.claims['timer:'+g+':'+T];
-    h+=row(td,t,MISSION.timer[g],c?'받음':td?btn('timer:'+g,'받기'):'도전')});
+    h+=row(td,t,MISSION.timer[g],c?'받음':td?btn('timer:'+g,'받기'):Math.min(99,Math.round(best/m*100))+'%')});
   const tc=S.claims['total:'+T];
-  h+=row(tot>=240,'하루 총 4시간 공부',MISSION.total,tc?'받음':tot>=240?btn('total','받기'):`${fmtMin(tot)} / 4시간`,tc||tot>=240?null:Math.min(100,Math.round(tot/240*100)));
+  h+=row(tot>=240,'하루 총 4시간 공부',MISSION.total,tc?'받음':tot>=240?btn('total','받기'):Math.min(99,Math.round(tot/240*100))+'%',tc||tot>=240?null:Math.min(100,Math.round(tot/240*100)));
   h+='</ul><div class="mgroup">마음 휴식 미션 · 누적, 2분 호흡을 끝까지</div><ul class="missions">';
-  [1,5,10,30].forEach(m=>{const c=S.claims['rest:'+m];h+=row(n>=m,`마음 휴식 ${m}회`,MISSION[m],c?'받음':n>=m?btn('rest:'+m,'받기'):`${Math.min(n,m)} / ${m}`,c||n>=m?null:Math.min(100,Math.round(n/m*100)))});
+  [1,5,10,30].forEach(m=>{const c=S.claims['rest:'+m];h+=row(n>=m,`마음 휴식 ${m}회`,MISSION[m],c?'받음':n>=m?btn('rest:'+m,'받기'):Math.min(99,Math.round(n/m*100))+'%',c||n>=m?null:Math.min(100,Math.round(n/m*100)))});
   $('missions').innerHTML=h+'</ul>';
 }
 $('missions').onclick=e=>{const b=e.target.closest('[data-claim]');if(b)claim(b.dataset.claim)};
