@@ -259,10 +259,32 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
 
 .foot{font-family:var(--serif);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);text-align:center;margin-top:28px}
 @media (prefers-reduced-motion: reduce){.bfill{transition:none!important}}
+
+/* opening + guide */
+.open{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .7s ease}
+.open.out{opacity:0;pointer-events:none}
+.open img{width:112px;height:112px;border-radius:26px;border:1px solid var(--line);animation:opIn 1s ease both}
+.open .t{font-family:var(--script);font-size:54px;line-height:1;color:var(--mauve);animation:opIn 1s ease .35s both}
+.open .s{font-family:var(--serif);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--soft);animation:opIn 1s ease .7s both}
+@keyframes opIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.guide{position:fixed;inset:0;z-index:55;background:color-mix(in srgb,var(--ink) 38%,transparent);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .4s ease}
+.guide.out{opacity:0;pointer-events:none}
+.gcard{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);padding:26px 24px 20px;text-align:center}
+.gcard .gn{font-family:var(--script);font-size:34px;color:var(--rose);line-height:1}
+.gcard h2{font-family:var(--kr);font-size:18px;font-weight:700;color:var(--ink);margin:10px 0 10px}
+.gcard p{word-break:keep-all;font-family:var(--kr);font-size:14px;line-height:1.75;color:var(--soft);margin:0;min-height:7.5em;white-space:pre-line}
+.gdots{display:flex;justify-content:center;gap:7px;margin:14px 0 16px}
+.gdots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.gdots i.on{background:var(--mauve)}
+.grow{display:flex;justify-content:space-between;align-items:center}
+.grow .skip{border:0;background:none;color:var(--soft);font-size:13px;padding:10px 4px;letter-spacing:.04em}
+.helpbtn{display:block;margin:10px auto 0;border:0;background:none;color:var(--soft);font-size:12px;text-decoration:underline;text-underline-offset:3px}
 </style>
 
 </head>
 <body>
+<div class="open" id="open" role="presentation"><img src="icon-192.png" alt=""><div class="t">Dream Come</div><div class="s">study · rest · bloom</div></div>
+<div class="guide out" id="guide" role="dialog" aria-modal="true" aria-label="사용 방법"><div class="gcard"><div class="gn num" id="gN"></div><h2 id="gT"></h2><p id="gP"></p><div class="gdots" id="gD"></div><div class="grow"><button type="button" class="skip" id="gSkip">건너뛰기</button><button type="button" class="btn" id="gNext">다음</button></div></div></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="bow" viewBox="0 0 64 40">
     <path d="M32 19 C25 7 9 3 7 12 C5 21 21 25 32 21 Z"/>
@@ -427,6 +449,7 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
 </section>
 
 <p class="foot">Dream Come</p>
+<button type="button" class="helpbtn" id="helpBtn">사용 방법 다시 보기</button>
 </div>
 
 <nav class="tabs" aria-label="메뉴">
@@ -783,6 +806,25 @@ function renderRewards(){
   $('coll').innerHTML=ORDER.map(g=>{const pool=poolOf(g),have=pool.filter(i=>cnt[i]).length;
     return `<div class="cgroup"><div class="cgh"><span class="gb ${g}">${g}</span>${have} / ${pool.length}</div><div class="cgrid">${pool.map(id=>{const n=cnt[id]||0;
       return `<div class="ctile${n?'':' lock'}" data-rid="${id}">${rimg(id)}<div class="cn">${n?RB[id][1]:'???'}</div>${n>1?`<span class="cc num">×${n}</span>`:''}</div>`}).join('')}</div></div>`}).join('');
+}
+
+/* opening + first-run guide */
+{const op=$('open'),g=$('guide');
+  const steps=[['01','오늘 컨디션부터','오늘 상태를 먼저 골라 보세요.\n컨디션에 맞춰 하루 목표 시간이 알맞게 줄어들어요.'],
+  ['02','정한 시간 안에 끝내기','타이머에서 시간을 정하고 시작해요.\n끝까지 채우면 완주, 중간에 그만두면\n다음엔 더 짧은 시간을 권해 드려요.'],
+  ['03','마음 돌보기','마음 탭에서 2분 호흡을 따라 해 보고\n오늘의 마음을 한 줄 일기로 남겨요.'],
+  ['04','토끼 모으기','리워드 탭에서 미션을 완료 체크하면\n토끼를 받아요. 매일 미션은 하루 한 번,\n마음 휴식은 쌓이는 횟수로 채워져요.']];
+  let k=0,t0=Date.now();
+  const drawG=()=>{const [n,t,p]=steps[k];$('gN').textContent=n+' / 0'+steps.length;$('gT').textContent=t;$('gP').textContent=p;
+    $('gD').innerHTML=steps.map((_,i)=>`<i class="${i===k?'on':''}"></i>`).join('');$('gNext').textContent=k===steps.length-1?'시작하기':'다음'};
+  const closeG=()=>{g.classList.add('out');S.guided=true;save()};
+  const openG=()=>{k=0;drawG();g.classList.remove('out')};
+  $('gNext').onclick=()=>{if(k<steps.length-1){k++;drawG()}else closeG()};
+  $('gSkip').onclick=closeG;
+  $('helpBtn').onclick=openG;
+  let gone=false;
+  const closeO=()=>{if(gone)return;gone=true;op.classList.add('out');setTimeout(()=>op.remove(),800);if(!S.guided)openG()};
+  op.onclick=closeO;setTimeout(closeO,2400);
 }
 
 function renderAll(){renderToday();renderSubjects();renderPresets();renderNotes();draw()}
