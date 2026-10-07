@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#FFFFFF"/>
+  <!-- sand -->
+  <path d="M438 392 C458 446 492 476 503 512 L521 512 C532 476 566 446 586 392 Z" fill="#E3BCC0"/>
+  <path d="M396 780 C414 712 470 688 512 688 C554 688 610 712 628 780 Z" fill="#E3BCC0"/>
+  <line x1="512" y1="520" x2="512" y2="690" stroke="#E3BCC0" stroke-width="7" stroke-linecap="round"/>
+  <!-- glass -->
+  <path d="M376 244 C376 392 472 452 497 512 C472 572 376 632 376 780 L648 780 C648 632 552 572 527 512 C552 452 648 392 648 244 Z"
+        fill="none" stroke="#8E7276" stroke-width="12" stroke-linejoin="round"/>
+  <!-- frame -->
+  <rect x="320" y="200" width="384" height="48" rx="24" fill="#F3E6E7" stroke="#8E7276" stroke-width="12"/>
+  <rect x="320" y="776" width="384" height="48" rx="24" fill="#F3E6E7" stroke="#8E7276" stroke-width="12"/>
+  <!-- bow at the waist -->
+  <g transform="translate(392 440) scale(3.75)" fill="#F7EAEB" stroke="#B6979A" stroke-width="2.2" stroke-linejoin="round">
+    <path d="M32 19 C25 7 9 3 7 12 C5 21 21 25 32 21 Z"/>
+    <path d="M32 19 C39 7 55 3 57 12 C59 21 43 25 32 21 Z"/>
+    <path d="M30 21 L22 38 L26.5 36.5 L31.5 23 Z"/>
+    <path d="M34 21 L42 38 L37.5 36.5 L32.5 23 Z"/>
+    <ellipse cx="32" cy="20" rx="4.2" ry="3.6"/>
+  </g>
+</svg>
