@@ -268,7 +268,6 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
 .guide{position:fixed;inset:0;z-index:55;transition:opacity .4s ease}
 .guide.out{opacity:0;pointer-events:none}
 .gframe{position:fixed;z-index:56;pointer-events:none;border:2px solid var(--bartoday);border-radius:6px;box-shadow:0 0 0 5px color-mix(in srgb,var(--bartoday) 22%,transparent);animation:gpulse 1.6s ease-in-out infinite;transition:top .3s,left .3s,width .3s,height .3s}
-.gframe::before{content:"";position:absolute;left:50%;top:-17px;width:3px;height:13px;margin-left:-1.5px;background:var(--bartoday);border-radius:2px}
 @keyframes gpulse{50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--bartoday) 8%,transparent)}}
 .gcard{position:fixed;z-index:57;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:380px;background:var(--card);border:1px solid var(--line);padding:18px 20px 12px;text-align:center;box-shadow:0 8px 30px color-mix(in srgb,var(--ink) 18%,transparent)}
 .gcard .gn{font-family:var(--serif);font-size:13px;letter-spacing:.2em;color:var(--rose);line-height:1}
@@ -820,16 +819,19 @@ function renderRewards(){
   ['mind','#noteForm','한 줄 일기','오늘의 마음을 한 줄로 남겨요.'],
   ['rewards','#missions','토끼 모으기','미션을 완료 체크하면 토끼를 받아요.\n매일 미션은 하루 한 번, 마음 휴식은 쌓이는 횟수예요.']];
   let k=0,on=false;
-  const place=(f,el,pad)=>{if(!el){f.style.display='none';return}const r=el.getBoundingClientRect();f.style.display='block';
-    f.style.left=(r.left-pad)+'px';f.style.top=(r.top-pad)+'px';f.style.width=(r.width+pad*2-4)+'px';f.style.height=(r.height+pad*2-4)+'px'};
+  const place=(f,el,pad,clamp)=>{if(!el){f.style.display='none';return}const r=el.getBoundingClientRect();
+    let t=r.top-pad,b=r.bottom+pad;if(clamp){const nt=document.querySelector('nav.tabs').getBoundingClientRect().top;t=Math.max(t,card.getBoundingClientRect().bottom+8);b=Math.min(b,nt-10)}
+    if(b-t<10){f.style.display='none';return}
+    f.style.display='block';f.style.left=(r.left-pad)+'px';f.style.top=t+'px';f.style.width=(r.width+pad*2-4)+'px';f.style.height=(b-t-4)+'px'};
+  const tall=el=>el&&el.getBoundingClientRect().height>innerHeight*.42;
   const layout=()=>{if(!on)return;const [tab,sel]=steps[k];const el=document.querySelector(sel),tb=document.querySelector('nav.tabs [data-tab="'+tab+'"]');
-    place(f1,el,6);place(f2,tb,0);
     const r=el?el.getBoundingClientRect():null,mid=r?r.top+r.height/2:0;
-    if(r&&mid>innerHeight*.5){card.style.top='16px';card.style.bottom='auto'}else{card.style.bottom='calc(78px + env(safe-area-inset-bottom,0px))';card.style.top='auto'}};
+    if(r&&(tall(el)||mid>innerHeight*.5)){card.style.top='16px';card.style.bottom='auto'}else{card.style.bottom='calc(78px + env(safe-area-inset-bottom,0px))';card.style.top='auto'}
+    place(f1,el,6,tall(el)||mid>innerHeight*.5);place(f2,tb,0,false)};
   const drawG=()=>{const [tab,sel,t,p]=steps[k];go(tab);
     $('gN').textContent=(k+1)+' / '+steps.length;$('gT').textContent=t;$('gP').textContent=p;
     $('gD').innerHTML=steps.map((_,i)=>`<i class="${i===k?'on':''}"></i>`).join('');$('gNext').textContent=k===steps.length-1?'시작하기':'다음';
-    const el=document.querySelector(sel);if(el){const y=el.getBoundingClientRect().top+scrollY-96;scrollTo({top:Math.max(0,y)})}
+    const el=document.querySelector(sel);if(el){const y=el.getBoundingClientRect().top+scrollY-(tall(el)?card.offsetHeight+40:96);scrollTo({top:Math.max(0,y)})}
     layout();setTimeout(layout,80);setTimeout(layout,300)};
   const closeG=()=>{on=false;g.classList.add('out');go('today');S.guided=true;save()};
   const openG=()=>{k=0;on=true;g.classList.remove('out');drawG()};
