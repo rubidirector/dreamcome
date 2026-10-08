@@ -471,7 +471,7 @@ button{-webkit-user-select:none;user-select:none}
 </section>
 
 <p class="foot">Dream Come</p>
-<div id="footBtns"><button type="button" class="helpbtn" id="acctBtn">로그인 · 내 기록 저장</button>
+<div id="footBtns"><button type="button" class="helpbtn" id="acctBtn">회원가입 · 로그인</button>
 <button type="button" class="helpbtn" id="helpBtn">사용 방법 다시 보기</button></div>
 </div>
 
@@ -1016,7 +1016,8 @@ cloudInit();
   ['mind','.breath','2분 호흡','마음이 복잡할 때 호흡 시작을 눌러\n원이 줄어드는 리듬에 맞춰 숨을 쉬어요.'],
   ['mind','#noteForm','한 줄 일기','오늘의 마음을 한 줄로 남겨요.'],
   ['rewards','#missions','토끼 모으기','미션을 완료 체크하면 토끼를 받아요.\n매일 미션은 하루 한 번, 마음 휴식은 쌓이는 횟수예요.'],
-  ['today','#footBtns','기록 저장하기','Google로 로그인하면 기록을 저장할 수 있어요.\n로그인하지 않으면 기록이 날아갈 수 있어요.\n\n사용 방법은 맨 아래 \'사용 방법 다시 보기\'에서\n언제든 다시 볼 수 있어요.']];
+  ['today','#acctBtn','회원가입 · 로그인','맨 아래 \'회원가입 · 로그인\'을 누르고\nGoogle로 로그인하면 기록을 저장할 수 있어요.\n로그인하지 않으면 기록이 날아갈 수 있어요.'],
+  ['today','#helpBtn','사용 방법 다시 보기','이 안내는 맨 아래\n\'사용 방법 다시 보기\'를 누르면\n언제든 다시 볼 수 있어요.']];
   let k=0,on=false;
   const place=(f,el,pad,clamp)=>{if(!el){f.style.display='none';return}const r=el.getBoundingClientRect();
     let t=r.top-pad,b=r.bottom+pad;if(clamp){const nt=document.querySelector('nav.tabs').getBoundingClientRect().top;t=Math.max(t,card.getBoundingClientRect().bottom+8);b=Math.min(b,nt-10)}
