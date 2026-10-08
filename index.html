@@ -2,6 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google.com wss://*.firebaseio.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://*.google.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dream Come</title>
 <meta name="description" content="정해 둔 시간 안에 끝내는 공부 타이머와 컨디션 기록, 토끼 리워드를 담은 공부·멘탈 관리 웹앱">
@@ -501,7 +503,7 @@ button{-webkit-user-select:none;user-select:none}
         <p class="muted" style="margin:0 0 10px">로그인해 두면 기록이 자동으로 저장돼요. 폰을 바꾸거나 실수로 지워도 같은 계정으로 로그인하면 다시 불러올 수 있어요.</p>
         <form id="authForm" autocomplete="on">
           <input class="field" id="authEmail" type="email" placeholder="이메일" autocomplete="email" required>
-          <input class="field" id="authPw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password" minlength="6" required>
+          <input class="field" id="authPw" type="password" placeholder="비밀번호 (가입 시 8자 이상)" autocomplete="current-password" required>
           <div class="row" style="margin-top:12px"><button class="btn ghost" type="button" id="signUpBtn">가입하기</button><button class="btn" type="submit" id="signInBtn">로그인</button></div>
         </form>
         <button type="button" class="linkbtn" id="resetPwBtn">비밀번호를 잊었어요</button>
@@ -538,7 +540,7 @@ const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+Strin
 const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const $=id=>document.getElementById(id);
 const fmtMin=m=>{m=Math.round(m);const h=Math.floor(m/60),r=m%60;return h?h+'h'+(r?' '+r+'m':''):r+'m'};
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const T=dk(new Date());
 const GR={S:{name:'천사날개토끼',how:'하루 총 공부 4시간 달성'},A:{name:'생크림딸기토끼',how:'40분 이상 타이머 완주'},B:{name:'딸기마카롱토끼',how:'25분 이상 타이머 완주'},C:{name:'딸기우유토끼',how:'10분 이상 타이머 완주'}};
 const ORDER=['S','A','B','C'];
@@ -576,7 +578,29 @@ function migrate(s){
   if(!s||typeof s!=='object')return blank();
   if((s.schema||1)<SCHEMA)lsSet(KEY+'.pre'+SCHEMA,JSON.stringify(s));
   const b=blank();for(const k in b)if(s[k]==null)s[k]=b[k];
-  s.schema=SCHEMA;return s;
+  s.schema=SCHEMA;return clean(s);
+}
+/* validate everything that comes from storage or the cloud: types, ranges, lengths */
+const DRE=/^\d{4}-\d{2}-\d{2}$/;
+const nz=(v,lo,hi,d)=>{v=+v;return isFinite(v)?Math.min(hi,Math.max(lo,v)):d};
+const sz=(v,n)=>typeof v==='string'?v.slice(0,n):'';
+const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
+function clean(s){
+  s.sample=!!s.sample;s.guided=!!s.guided;
+  s.goal=nz(s.goal,0,1440,240);s.lastPlan=nz(s.lastPlan,1,600,25);s.updatedAt=nz(s.updatedAt,0,8.64e15,0);
+  s.subjects=(Array.isArray(s.subjects)?s.subjects:[]).filter(v=>typeof v==='string'&&v).map(v=>v.slice(0,12)).slice(0,60);
+  s.sessions=(Array.isArray(s.sessions)?s.sessions:[]).filter(x=>isObj(x)&&DRE.test(x.date)).slice(-20000).map(x=>{const o={...x};
+    if('subject' in o)o.subject=sz(o.subject,12);if('task' in o&&o.task!==undefined)o.task=sz(o.task,100);
+    o.min=nz(o.min,0,1440,0);o.planned=nz(o.planned,0,1440,0);o.done=!!o.done;if('claimed' in o)o.claimed=!!o.claimed;return o});
+  s.notes=(Array.isArray(s.notes)?s.notes:[]).filter(x=>isObj(x)&&DRE.test(x.date)).slice(-5000).map(x=>({...x,date:x.date,text:sz(x.text,500)}));
+  s.rests=(Array.isArray(s.rests)?s.rests:[]).filter(v=>typeof v==='string'&&DRE.test(v)).slice(-20000);
+  const mo={};if(isObj(s.moods))for(const k of Object.keys(s.moods)){const v=Math.round(+s.moods[k]);if(DRE.test(k)&&v>=1&&v<=5)mo[k]=v}s.moods=mo;
+  const gl={};if(isObj(s.goals))for(const k of Object.keys(s.goals)){const v=+s.goals[k];if(DRE.test(k)&&isFinite(v)&&v>=0&&v<=1440)gl[k]=v}s.goals=gl;
+  const cl={};if(isObj(s.claims))for(const k of Object.keys(s.claims)){if(/^[A-Za-z0-9:_-]{1,40}$/.test(k)&&s.claims[k])cl[k]=1}s.claims=cl;
+  s.rewards=(Array.isArray(s.rewards)?s.rewards:[]).filter(r=>isObj(r)&&DRE.test(r.date)).slice(-20000).map(r=>{const o={...r};
+    if(Number.isInteger(+r.id)&&r.id!==null&&RB[+r.id]){o.id=+r.id;o.grade=RB[o.id][0]}else{o.id=null;if(!ORDER.includes(o.grade))o.grade='C'}
+    if('src' in o)o.src=sz(o.src,24);return o});
+  return s;
 }
 function isEmpty(s){return !s||(!(s.sessions||[]).length&&!(s.rewards||[]).length&&!(s.notes||[]).length&&!(s.rests||[]).length&&!Object.keys(s.moods||{}).length)}
 let S=null;
@@ -588,7 +612,8 @@ if(!S||!S.sessions||S.sample)S=blank();
 const needBF=!S.rewards;
 S=migrate(S);
 if(needBF)S.rewards=backfill(S);
-{const own=new Set();S.rewards.forEach(r=>{if(r.id==null||!RB[r.id])r.id=pick(r.grade,own);else if(RB[r.id][0]!==r.grade)r.grade=RB[r.id][0];own.add(r.id)});}
+function fixRewards(st){const own=new Set();st.rewards.forEach(r=>{if(r.id==null||!RB[r.id])r.id=pick(r.grade,own);else if(RB[r.id][0]!==r.grade)r.grade=RB[r.id][0];own.add(r.id)})}
+fixRewards(S);
 const writeLocal=()=>lsSet(KEY,JSON.stringify(S));
 writeLocal();
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
@@ -596,6 +621,7 @@ function save(){S.updatedAt=Date.now();writeLocal();if(typeof cloudSchedule==='f
 
 /* merge two copies of the data without losing anything */
 function mergeState(a,b){
+  a=migrate(JSON.parse(JSON.stringify(a||{})));b=migrate(JSON.parse(JSON.stringify(b||{})));
   if(isEmpty(a))return migrate(JSON.parse(JSON.stringify(b)));
   if(isEmpty(b))return migrate(JSON.parse(JSON.stringify(a)));
   const nw=(a.updatedAt||0)>=(b.updatedAt||0)?a:b,od=nw===a?b:a;
@@ -944,13 +970,15 @@ async function cloudSync(){
       const snap=await tx.get(ref);let remote=null;
       if(snap.exists){try{remote=JSON.parse(snap.data().data)}catch(e){}}
       merged=remote?mergeState(S,remote):migrate(JSON.parse(JSON.stringify(S)));
-      tx.set(ref,{data:JSON.stringify(merged),schema:SCHEMA,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      const payload=JSON.stringify(merged);
+      if(payload.length>300000)throw {code:'dc/too-big'};
+      tx.set(ref,{data:payload,schema:SCHEMA,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
     });
     const changed=JSON.stringify(merged)!==JSON.stringify(S);
-    S=merged;writeLocal();lsSet(KEY+'.synced',String(Date.now()));
+    fixRewards(merged);S=merged;writeLocal();lsSet(KEY+'.synced',String(Date.now()));
     if(changed)refreshAll();
     if(/동기화하지/.test($('authMsg').textContent))$('authMsg').textContent='';
-  }catch(e){$('authMsg').textContent='동기화하지 못했어요. 인터넷 연결을 확인해 주세요. 기록은 이 폰에 안전하게 남아 있어요.'}
+  }catch(e){$('authMsg').textContent=e&&e.code==='dc/too-big'?'기록이 너무 많아 저장 한도를 넘었어요. 오래된 일기를 줄여 주세요.':'동기화하지 못했어요. 인터넷 연결을 확인해 주세요. 기록은 이 폰에 안전하게 남아 있어요.'}
   CLOUD.busy=false;renderAcct();
   if(CLOUD.pending){CLOUD.pending=false;cloudSchedule()}
 }
@@ -958,11 +986,12 @@ function cloudSchedule(){if(!CLOUD||!CLOUD.user)return;clearTimeout(CLOUD.timer)
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&CLOUD.user&&CLOUD.timer){clearTimeout(CLOUD.timer);CLOUD.timer=0;cloudSync()}});
 function refreshAll(){renderAll();const v=document.querySelector('[data-tab][aria-current="page"]');if(v&&v.dataset.tab==='report')renderReport();if(v&&v.dataset.tab==='rewards')renderRewards()}
 const AUTH_MSG={'auth/invalid-email':'이메일 형식을 확인해 주세요.','auth/user-not-found':'가입된 계정이 없어요. 먼저 가입해 주세요.','auth/wrong-password':'비밀번호가 맞지 않아요.','auth/invalid-credential':'이메일이나 비밀번호가 맞지 않아요.','auth/invalid-login-credentials':'이메일이나 비밀번호가 맞지 않아요.','auth/email-already-in-use':'이미 가입된 이메일이에요. 로그인해 주세요.','auth/weak-password':'비밀번호는 6자 이상으로 해 주세요.','auth/network-request-failed':'인터넷 연결을 확인해 주세요.','auth/too-many-requests':'잠시 후 다시 시도해 주세요.','auth/missing-password':'비밀번호를 입력해 주세요.'};
-const authErr=e=>AUTH_MSG[e&&e.code]||'잠시 후 다시 시도해 주세요.';
+const authErr=e=>AUTH_MSG[e&&e.code]||('잠시 후 다시 시도해 주세요.'+(e&&e.code?' ('+String(e.code).replace(/^auth\//,'').slice(0,60)+')':''));
 async function authDo(kind){
   const em=$('authEmail').value.trim(),pw=$('authPw').value;
   if(!CLOUD.auth){$('authMsg').textContent='클라우드에 연결 중이에요. 잠시 후 다시 눌러 주세요.';return}
-  if(!em||pw.length<6){$('authMsg').textContent='이메일과 6자 이상 비밀번호를 입력해 주세요.';return}
+  if(!em||pw.length<(kind==='up'?8:6)){$('authMsg').textContent=kind==='up'?'이메일과 8자 이상 비밀번호를 입력해 주세요.':'이메일과 비밀번호를 입력해 주세요.';return}
+  if(kind==='up'&&(/^(.)\1+$/.test(pw)||/^\d+$/.test(pw))){$('authMsg').textContent='같은 글자 반복이나 숫자만으로는 만들 수 없어요. 영문과 숫자를 섞어 주세요.';return}
   $('authMsg').textContent=kind==='up'?'가입하는 중…':'로그인하는 중…';
   try{kind==='up'?await CLOUD.auth.createUserWithEmailAndPassword(em,pw):await CLOUD.auth.signInWithEmailAndPassword(em,pw);
     $('authPw').value='';$('authMsg').textContent=kind==='up'?'가입했어요. 지금 기록을 계정에 저장할게요.':'로그인했어요. 계정의 기록을 불러올게요.'}
