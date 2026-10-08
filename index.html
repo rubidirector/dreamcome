@@ -83,10 +83,10 @@ button{cursor:pointer}
 .ctile.glow{animation:glow 3.2s ease-in-out .35s 1 both;z-index:1}
 @keyframes glow{
   0%{box-shadow:0 0 0 0 transparent,0 0 0 0 transparent}
-  15%{box-shadow:0 0 0 2px var(--rose),0 0 22px 8px var(--bar)}
-  35%{box-shadow:0 0 0 2px var(--rose),0 0 12px 3px var(--bar)}
-  55%{box-shadow:0 0 0 2px var(--rose),0 0 22px 8px var(--bar)}
-  100%{box-shadow:0 0 0 2px transparent,0 0 30px 12px transparent}}
+  18%{box-shadow:0 0 0 1.5px var(--rose),0 0 10px 2px color-mix(in srgb,var(--rose) 40%,transparent)}
+  40%{box-shadow:0 0 0 1.5px var(--rose),0 0 6px 1px color-mix(in srgb,var(--rose) 25%,transparent)}
+  60%{box-shadow:0 0 0 1.5px var(--rose),0 0 10px 2px color-mix(in srgb,var(--rose) 40%,transparent)}
+  100%{box-shadow:0 0 0 1.5px transparent,0 0 12px 3px transparent}}
 @media (prefers-reduced-motion: reduce){.ctile.glow{animation:glowfade 2.5s linear both}@keyframes glowfade{0%,60%{box-shadow:0 0 0 2px var(--rose)}100%{box-shadow:0 0 0 2px transparent}}}
 .cc{position:absolute;top:4px;right:6px;font-size:12px;color:var(--rose)}
 .gb{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:700;color:var(--card);flex-shrink:0}
@@ -201,6 +201,9 @@ button{cursor:pointer}
 /* sheet */
 .scrim{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 30%,transparent);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:16px}
 .sheet{width:100%;max-width:440px;margin-bottom:env(safe-area-inset-bottom,0px)}
+#rwScrim,#scrim{align-items:center}
+#rwScrim .sheet,#scrim .sheet{margin-bottom:0}
+#sheetArt:empty{display:none}
 .scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-block:14px}
 
 /* report */
@@ -269,6 +272,7 @@ button,a,label,input,select,textarea,.mood,.chip{touch-action:manipulation;-webk
 button{-webkit-user-select:none;user-select:none}
 .btn:not(:disabled):active,.chip:not(:disabled):active,.mood:active,.claim:active,.addbtn:active{transform:scale(.97)}
 .field::placeholder{opacity:1}
+#subInput::placeholder,#task::placeholder{color:color-mix(in srgb,var(--soft) 60%,var(--card));font-size:14px}
 @media (max-width:360px){.card{padding-left:16px;padding-right:16px}.mood{font-size:12px}}
 /* opening + guide */
 .open{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .7s ease}
@@ -474,10 +478,9 @@ button{-webkit-user-select:none;user-select:none}
 
 <div class="scrim" id="scrim" hidden>
   <div class="card sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT">
-    <svg class="bowtop" aria-hidden="true"><use href="#bow" class="bow"/></svg>
     <p class="label" id="sheetL">Well done</p>
     <h3 id="sheetT"></h3>
-    <p class="muted" id="sheetSum" style="margin:0 0 6px"></p>
+    <p class="muted" id="sheetSum" style="margin:0 0 16px"></p>
     <div class="sheetart" id="sheetArt"></div>
     <div class="row"><button class="btn ghost" type="button" id="discard">기록 안 함</button><button class="btn ghost" type="button" id="suggestBtn" hidden></button><button class="btn" type="button" id="saveSess">확인</button></div>
   </div>
@@ -678,10 +681,10 @@ function chime(){
       o.connect(g);g.connect(actx.destination);o.start(at);o.stop(at+1.3)})}catch(e){}
 }
 function openSheet(l,t,sum,suggest){
-  $('sheetL').textContent=l;$('sheetT').textContent=t;$('sheetSum').textContent=sum;
+  $('sheetL').textContent=l;$('sheetT').textContent=t;
   {const g=pending&&pending.done&&gradeOf(pending.planned),tot=pending?minsOn(T)+pending.min>=240&&!S.claims['total:'+T]:false;
    const msg=[g?'타이머 미션':'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
-   $('sheetArt').innerHTML=`<p class="muted" style="margin:0">${msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'타이머를 끝까지 채우면 리워드 미션이 완료돼요.'}</p>`;}
+   $('sheetSum').textContent=sum+' '+(msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'타이머를 끝까지 채우면 리워드 미션이 완료돼요.');$('sheetArt').innerHTML='';}
   $('saveSess').textContent='저장';
   $('suggestBtn').hidden=!suggest;$('suggestBtn').dataset.m=suggest||'';$('suggestBtn').textContent=`다음엔 ${fmtMin(suggest)}`;
   $('scrim').hidden=false;
