@@ -471,8 +471,8 @@ button{-webkit-user-select:none;user-select:none}
 </section>
 
 <p class="foot">Dream Come</p>
-<button type="button" class="helpbtn" id="acctBtn">로그인 · 내 기록 저장</button>
-<button type="button" class="helpbtn" id="helpBtn">사용 방법 다시 보기</button>
+<div id="footBtns"><button type="button" class="helpbtn" id="acctBtn">로그인 · 내 기록 저장</button>
+<button type="button" class="helpbtn" id="helpBtn">사용 방법 다시 보기</button></div>
 </div>
 
 <nav class="tabs" aria-label="메뉴">
@@ -1015,7 +1015,8 @@ cloudInit();
   ['report','[data-view="report"] .card','한 주를 돌아보기','공부 시간과 컨디션이 그래프로 쌓여요.\n지난주와 비교해 패턴도 알려 드려요.'],
   ['mind','.breath','2분 호흡','마음이 복잡할 때 호흡 시작을 눌러\n원이 줄어드는 리듬에 맞춰 숨을 쉬어요.'],
   ['mind','#noteForm','한 줄 일기','오늘의 마음을 한 줄로 남겨요.'],
-  ['rewards','#missions','토끼 모으기','미션을 완료 체크하면 토끼를 받아요.\n매일 미션은 하루 한 번, 마음 휴식은 쌓이는 횟수예요.']];
+  ['rewards','#missions','토끼 모으기','미션을 완료 체크하면 토끼를 받아요.\n매일 미션은 하루 한 번, 마음 휴식은 쌓이는 횟수예요.'],
+  ['today','#footBtns','기록 저장하기','Google로 로그인하면 기록을 저장할 수 있어요.\n로그인하지 않으면 기록이 날아갈 수 있어요.\n\n사용 방법은 맨 아래 \'사용 방법 다시 보기\'에서\n언제든 다시 볼 수 있어요.']];
   let k=0,on=false;
   const place=(f,el,pad,clamp)=>{if(!el){f.style.display='none';return}const r=el.getBoundingClientRect();
     let t=r.top-pad,b=r.bottom+pad;if(clamp){const nt=document.querySelector('nav.tabs').getBoundingClientRect().top;t=Math.max(t,card.getBoundingClientRect().bottom+8);b=Math.min(b,nt-10)}
@@ -1028,12 +1029,12 @@ cloudInit();
     place(f1,el,6,tall(el)||mid>innerHeight*.5);place(f2,tb,0,false)};
   const drawG=()=>{const [tab,sel,t,p]=steps[k];go(tab);
     $('gN').textContent=(k+1)+' / '+steps.length;$('gT').textContent=t;$('gP').textContent=p;
-    $('gD').innerHTML=steps.map((_,i)=>`<i class="${i===k?'on':''}"></i>`).join('');$('gNext').textContent=k===steps.length-1?'시작하기':'다음';
+    $('gD').innerHTML=steps.map((_,i)=>`<i class="${i===k?'on':''}"></i>`).join('');const last=k===steps.length-1;$('gNext').textContent=last?(CLOUD.user?'시작하기':'로그인하기'):'다음';$('gSkip').textContent=last?(CLOUD.user?'닫기':'나중에'):'건너뛰기';
     const el=document.querySelector(sel);if(el){const y=el.getBoundingClientRect().top+scrollY-(tall(el)?card.offsetHeight+40:96);scrollTo({top:Math.max(0,y)})}
     layout();setTimeout(layout,80);setTimeout(layout,300)};
   const closeG=()=>{on=false;g.classList.add('out');go('today');S.guided=true;save()};
   const openG=()=>{k=0;on=true;g.classList.remove('out');drawG()};
-  $('gNext').onclick=()=>{if(k<steps.length-1){k++;drawG()}else closeG()};
+  $('gNext').onclick=()=>{if(k<steps.length-1){k++;drawG()}else{closeG();if(!CLOUD.user)$('acctBtn').click()}};
   $('gSkip').onclick=closeG;
   $('helpBtn').onclick=openG;
   addEventListener('resize',layout);addEventListener('scroll',layout,{passive:true});
