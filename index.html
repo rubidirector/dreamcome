@@ -15,6 +15,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dream Come">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -209,6 +211,7 @@ button{cursor:pointer}
 .acct .row{justify-content:center;gap:8px;flex-wrap:wrap}
 .linkbtn{display:block;margin:10px auto 0;border:0;background:none;color:var(--soft);font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .gbtn{display:block;margin:0 auto;display:flex;align-items:center;gap:8px;justify-content:center}
+.inapp{border:1px dashed var(--rose);padding:12px 14px;margin:0 0 14px;font-size:14px;color:var(--mauve);text-align:left;word-break:keep-all}
 .acct-hr{border:0;border-top:1px dotted var(--line);margin:16px 0}
 #rwScrim .sheet,#scrim .sheet{margin-bottom:0}
 #sheetArt:empty{display:none}
@@ -502,6 +505,10 @@ button{-webkit-user-select:none;user-select:none}
     <div id="cloudBox" hidden>
       <div id="cloudOut">
         <p class="muted" style="margin:0 0 10px">Google 계정으로 로그인해 두면 기록이 자동으로 저장돼요. 폰을 바꾸거나 실수로 지워도 같은 계정으로 로그인하면 다시 불러올 수 있어요.</p>
+        <div id="inappBox" class="inapp" hidden>
+          <p id="inappMsg" style="margin:0 0 10px"></p>
+          <div class="row"><button class="btn" type="button" id="extBtn" hidden>다른 브라우저로 열기</button><button class="btn ghost" type="button" id="copyBtn">주소 복사</button></div>
+        </div>
         <button class="btn gbtn" type="button" id="googleBtn" style="background:#fff;color:var(--ink)"><svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.2 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg> Google로 로그인</button>
       </div>
       <div id="cloudIn" hidden>
@@ -536,6 +543,7 @@ window.DC_FIREBASE = {
 };
 </script>
 <script>
+if(window.top!==window.self){try{window.top.location.replace(location.href)}catch(e){document.documentElement.style.display='none'}}
 (function(){
 const KEY='dreamcome.v4';
 const MOODS=[['지침',1],['가라앉음',2],['보통',3],['괜찮음',4],['반짝임',5]];
@@ -763,6 +771,7 @@ function draw(){
 function lockScreen(on){
   try{if(on&&navigator.wakeLock)navigator.wakeLock.request('screen').then(w=>wake=w,()=>{});else if(wake){wake.release();wake=null}}catch(e){}
 }
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&running)lockScreen(true)});
 function halt(){if(running){remain=Math.max(0,endAt-Date.now());running=false}clearInterval(tick);lockScreen(false)}
 $('startBtn').onclick=function(){
   if(running){halt();this.textContent='계속';$('clockSub').textContent='잠시 멈췄어요';return}
@@ -949,6 +958,18 @@ function renderRewards(){
 var CLOUD={cfg:window.DC_FIREBASE||null,user:null,auth:null,db:null,busy:false,pending:false,timer:0};
 const FBV='10.14.1';
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+const UA=navigator.userAgent||'';
+const IS_IOS=/iPhone|iPad|iPod/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const IS_AND=/Android/i.test(UA);
+const IS_KAKAO=/KAKAOTALK/i.test(UA);
+const INAPP=IS_KAKAO||/Instagram|FBAN|FBAV|FB_IAB|NAVER\(inapp|; ?Line\/|DaumApps|BAND\/|everytimeApp|Whale\/.*inapp/i.test(UA)||(IS_AND&&/; wv\)/.test(UA));
+const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+function openExternal(){const u=location.href;
+  if(IS_KAKAO){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(u);return}
+  if(IS_AND){location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';return}}
+function renderInapp(){if(!INAPP)return;$('inappBox').hidden=false;
+  const can=IS_KAKAO||IS_AND;$('extBtn').hidden=!can;
+  $('inappMsg').textContent=can?'앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 아래 버튼으로 '+(IS_IOS?'Safari':'Chrome')+'에서 열어 주세요.':'앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 오른쪽 위나 아래의 ··· 메뉴에서 \'Safari로 열기\'(또는 \'다른 브라우저로 열기\')를 눌러 주세요.'}
 async function cloudInit(){
   if(!CLOUD.cfg||!CLOUD.cfg.apiKey)return;
   $('cloudBox').hidden=false;
@@ -959,6 +980,7 @@ async function cloudInit(){
     if(!firebase.apps.length)firebase.initializeApp(CLOUD.cfg);
     CLOUD.auth=firebase.auth();CLOUD.db=firebase.firestore();
     CLOUD.auth.onAuthStateChanged(u=>{CLOUD.user=u;renderAcct();if(u)cloudSync()});
+    CLOUD.auth.getRedirectResult().catch(e=>{$('authMsg').textContent=authErr(e)});
   }catch(e){$('authMsg').textContent='클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'}
 }
 function renderAcct(){
@@ -996,12 +1018,19 @@ const AUTH_MSG={'auth/invalid-email':'이메일 형식을 확인해 주세요.',
 const authErr=e=>AUTH_MSG[e&&e.code]||('잠시 후 다시 시도해 주세요.'+(e&&e.code?' ('+String(e.code).replace(/^auth\//,'').slice(0,60)+')':''));
 async function googleDo(){
   if(!CLOUD.auth){$('authMsg').textContent='클라우드에 연결 중이에요. 잠시 후 다시 눌러 주세요.';return}
-  try{const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
-    await CLOUD.auth.signInWithPopup(p);$('authMsg').textContent='로그인했어요. 계정의 기록을 불러올게요.'}
-  catch(e){$('authMsg').textContent=authErr(e)}
+  if(INAPP){renderInapp();$('authMsg').textContent='';return}
+  const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+  try{await CLOUD.auth.signInWithPopup(p);$('authMsg').textContent='로그인했어요. 계정의 기록을 불러올게요.'}
+  catch(e){const c=e&&e.code;
+    if(c==='auth/popup-blocked'||c==='auth/operation-not-supported-in-this-environment'){
+      try{$('authMsg').textContent='로그인 화면으로 이동할게요…';await CLOUD.auth.signInWithRedirect(p);return}catch(e2){$('authMsg').textContent=authErr(e2);return}}
+    $('authMsg').textContent=authErr(e)+(STANDALONE&&IS_IOS&&c==='auth/popup-closed-by-user'?' 홈 화면 앱에서 계속 안 되면 Safari에서 로그인해 주세요.':'')}
 }
 $('signOutBtn').onclick=async()=>{if(CLOUD.timer){clearTimeout(CLOUD.timer);CLOUD.timer=0;await cloudSync()}await CLOUD.auth.signOut();$('authMsg').textContent='로그아웃했어요. 이 폰의 기록은 그대로 남아 있어요.'};
 $('googleBtn').onclick=googleDo;
+$('extBtn').onclick=openExternal;
+$('copyBtn').onclick=async()=>{const u=location.origin+location.pathname;try{await navigator.clipboard.writeText(u);$('authMsg').textContent='주소를 복사했어요. Safari나 Chrome 주소창에 붙여넣어 주세요.'}catch(e){$('authMsg').textContent=u}};
+renderInapp();
 $('acctBtn').onclick=()=>{renderAcct();$('authMsg').textContent='';$('acctScrim').hidden=false};
 $('acctClose').onclick=()=>{$('acctScrim').hidden=true};
 cloudInit();
