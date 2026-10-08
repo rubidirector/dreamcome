@@ -468,7 +468,7 @@ button{-webkit-user-select:none;user-select:none}
 </section>
 
 <p class="foot">Dream Come</p>
-<button type="button" class="helpbtn" id="acctBtn">내 기록 백업 · 불러오기</button>
+<button type="button" class="helpbtn" id="acctBtn">로그인 · 내 기록 저장</button>
 <button type="button" class="helpbtn" id="helpBtn">사용 방법 다시 보기</button>
 </div>
 
@@ -512,12 +512,7 @@ button{-webkit-user-select:none;user-select:none}
         <div class="row"><button class="btn ghost" type="button" id="signOutBtn">로그아웃</button><button class="btn" type="button" id="syncBtn">지금 동기화</button></div>
       </div>
       <p class="muted" id="authMsg" role="status" style="margin:10px 0 0"></p>
-      <hr class="acct-hr">
     </div>
-    <p class="muted" style="margin:0 0 10px">기록을 파일로 저장해 두고, 다른 폰이나 지운 뒤에 다시 불러올 수도 있어요.</p>
-    <div class="row"><button class="btn ghost" type="button" id="exportBtn">파일로 백업</button><label class="btn ghost" for="importFile" style="cursor:pointer">파일 불러오기</label></div>
-    <input type="file" id="importFile" accept="application/json,.json" hidden>
-    <p class="muted" id="fileMsg" role="status" style="margin:10px 0 0"></p>
     <div class="row" style="margin-top:14px"><button class="btn" type="button" id="acctClose">닫기</button></div>
   </div>
 </div>
@@ -979,17 +974,8 @@ $('resetPwBtn').onclick=async()=>{const em=$('authEmail').value.trim();if(!em){$
   try{await CLOUD.auth.sendPasswordResetEmail(em);$('authMsg').textContent='비밀번호를 바꾸는 메일을 보냈어요.'}catch(e){$('authMsg').textContent=authErr(e)}};
 $('signOutBtn').onclick=async()=>{if(CLOUD.timer){clearTimeout(CLOUD.timer);CLOUD.timer=0;await cloudSync()}await CLOUD.auth.signOut();$('authMsg').textContent='로그아웃했어요. 이 폰의 기록은 그대로 남아 있어요.'};
 $('syncBtn').onclick=()=>cloudSync();
-$('acctBtn').onclick=()=>{renderAcct();$('authMsg').textContent='';$('fileMsg').textContent='';$('acctScrim').hidden=false};
+$('acctBtn').onclick=()=>{renderAcct();$('authMsg').textContent='';$('acctScrim').hidden=false};
 $('acctClose').onclick=()=>{$('acctScrim').hidden=true};
-$('exportBtn').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'dreamcome',schema:SCHEMA,exportedAt:new Date().toISOString(),data:S})],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dreamcome-backup-'+T+'.json';document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);$('fileMsg').textContent='백업 파일을 저장했어요. 잘 보관해 두세요.'};
-$('importFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{const j=JSON.parse(await f.text());const d=j&&j.app==='dreamcome'?j.data:j;
-    if(!d||!Array.isArray(d.sessions))throw 0;
-    S=mergeState(S,migrate(d));save();refreshAll();$('fileMsg').textContent='기록을 불러왔어요. 지금 있던 기록과 합쳐졌어요.'}
-  catch(err){$('fileMsg').textContent='Dream Come 백업 파일이 아니에요. 다시 확인해 주세요.'}};
 cloudInit();
 
 /* opening + first-run guide (tab tour with highlight bars) */
