@@ -967,9 +967,9 @@ const STANDALONE=matchMedia('(display-mode: standalone)').matches||navigator.sta
 function openExternal(){const u=location.href;
   if(IS_KAKAO){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(u);return}
   if(IS_AND){location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';return}}
-function renderInapp(){if(!INAPP)return;$('inappBox').hidden=false;
+function renderInapp(force){if(!INAPP&&!force)return;$('inappBox').hidden=false;
   const can=IS_KAKAO||IS_AND;$('extBtn').hidden=!can;
-  $('inappMsg').textContent=can?'앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 아래 버튼으로 '+(IS_IOS?'Safari':'Chrome')+'에서 열어 주세요.':'앱 안의 브라우저에서는 Google 로그인이 막혀 있어요. 오른쪽 위나 아래의 ··· 메뉴에서 \'Safari로 열기\'(또는 \'다른 브라우저로 열기\')를 눌러 주세요.'}
+  $('inappMsg').textContent=can?'이 화면에서는 Google 로그인이 안 돼요. 아래 버튼으로 '+(IS_IOS?'Safari':'Chrome')+'에서 열어 주세요.':'이 화면에서는 Google 로그인이 안 돼요. 아래 \'주소 복사\'를 누른 뒤 Safari 주소창에 붙여넣어 열어 주세요. (링크를 열었다면 오른쪽 위·아래의 ··· 메뉴에서 \'Safari로 열기\'도 돼요.)'}
 async function cloudInit(){
   if(!CLOUD.cfg||!CLOUD.cfg.apiKey)return;
   $('cloudBox').hidden=false;
@@ -980,7 +980,6 @@ async function cloudInit(){
     if(!firebase.apps.length)firebase.initializeApp(CLOUD.cfg);
     CLOUD.auth=firebase.auth();CLOUD.db=firebase.firestore();
     CLOUD.auth.onAuthStateChanged(u=>{CLOUD.user=u;renderAcct();if(u)cloudSync()});
-    CLOUD.auth.getRedirectResult().catch(e=>{$('authMsg').textContent=authErr(e)});
   }catch(e){$('authMsg').textContent='클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'}
 }
 function renderAcct(){
@@ -1022,8 +1021,7 @@ async function googleDo(){
   const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
   try{await CLOUD.auth.signInWithPopup(p);$('authMsg').textContent='로그인했어요. 계정의 기록을 불러올게요.'}
   catch(e){const c=e&&e.code;
-    if(c==='auth/popup-blocked'||c==='auth/operation-not-supported-in-this-environment'){
-      try{$('authMsg').textContent='로그인 화면으로 이동할게요…';await CLOUD.auth.signInWithRedirect(p);return}catch(e2){$('authMsg').textContent=authErr(e2);return}}
+    if(c==='auth/popup-blocked'||c==='auth/operation-not-supported-in-this-environment'){renderInapp(true);$('authMsg').textContent='로그인 창을 열 수 없어요. Safari나 Chrome에서 직접 열어 주세요.';return}
     $('authMsg').textContent=authErr(e)+(STANDALONE&&IS_IOS&&c==='auth/popup-closed-by-user'?' 홈 화면 앱에서 계속 안 되면 Safari에서 로그인해 주세요.':'')}
 }
 $('signOutBtn').onclick=async()=>{if(CLOUD.timer){clearTimeout(CLOUD.timer);CLOUD.timer=0;await cloudSync()}await CLOUD.auth.signOut();$('authMsg').textContent='로그아웃했어요. 이 폰의 기록은 그대로 남아 있어요.'};
