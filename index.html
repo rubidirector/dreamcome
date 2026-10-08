@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dream Come</title>
 <meta name="description" content="정해 둔 시간 안에 끝내는 공부 타이머와 컨디션 기록, 토끼 리워드를 담은 공부·멘탈 관리 웹앱">
-<meta name="theme-color" content="#FBF7F7">
+<meta name="theme-color" content="#FBF7F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D191A" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -23,7 +25,7 @@ img{max-width:100%}
 /* Layout: one narrow column of framed "cards" like boutique paper tags, stripes + lace oval + ribbon as the only ornaments; fixed tab bar at the bottom */
 :root{
   --paper:#FBF7F7; --stripe:#F8F1F1; --card:#FFFDFD; --line:#E2D2D3;
-  --rose:#B6979A; --mauve:#8E7276; --ink:#5B4A4D; --soft:#9C8A8C;
+  --rose:#B6979A; --mauve:#8E7276; --ink:#5B4A4D; --soft:#857378;
   --bowfill:#F1E4E4; --good:#8FA394; --warn:#C08F86;
   --bar:#C98F97; --bartoday:#A8707A; --moodc:#6D7EA6; --focusc:#B9A07A;
   --rbline:#F1AEB9; --rbfill:#FFFAFB; --rbinner:#FADADF; --rbeye:#8B6A65; --berry:#F08C9B; --leaf:#9CC5A1; --cream:#FFFDF6; --halo:#E6C68A;
@@ -33,12 +35,12 @@ img{max-width:100%}
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#1D191A; --stripe:#211C1D; --card:#262022; --line:#3F3537;
-  --rose:#C7A6A9; --mauve:#DDC4C6; --ink:#ECE0E1; --soft:#A8979A;
+  --rose:#C7A6A9; --mauve:#DDC4C6; --ink:#ECE0E1; --soft:#C2B3B6;
   --bowfill:#3A2F31; --good:#9DB3A2; --warn:#D6A39A;
   --bar:#B9848C; --bartoday:#E0AEB5; --moodc:#A3B3DA; --focusc:#D6BF92; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#1D191A; --stripe:#211C1D; --card:#262022; --line:#3F3537;
-  --rose:#C7A6A9; --mauve:#DDC4C6; --ink:#ECE0E1; --soft:#A8979A;
+  --rose:#C7A6A9; --mauve:#DDC4C6; --ink:#ECE0E1; --soft:#C2B3B6;
   --bowfill:#3A2F31; --good:#9DB3A2; --warn:#D6A39A;
   --bar:#B9848C; --bartoday:#E0AEB5; --moodc:#A3B3DA; --focusc:#D6BF92; color-scheme:dark}
 
@@ -98,9 +100,9 @@ button{cursor:pointer}
 .missions .ms{font-size:12px;color:var(--soft);margin-top:1px}
 .missions .st{font-size:13px;color:var(--soft);white-space:nowrap}
 .goalform{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px}
-.sel{border:1px solid var(--line);background:var(--card);padding:6px 8px;font-size:14px;color:var(--mauve)}
+.sel{border:1px solid var(--line);background:var(--card);padding:8px 10px;font-size:16px;color:var(--mauve)}
 .gtag{display:inline-block;font-size:11.5px;color:var(--mauve);background:var(--stripe);border:1px solid var(--line);border-radius:999px;padding:0 8px;margin-top:3px}
-.claim{border:1px solid var(--mauve);background:var(--mauve);color:var(--card);font-size:12.5px;padding:6px 14px;border-radius:999px;animation:pulse 1.8s ease-in-out infinite}
+.claim{border:1px solid var(--mauve);background:var(--mauve);color:var(--card);font-size:13px;padding:8px 16px;border-radius:999px;animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 4px var(--bowfill)}}
 @media (prefers-reduced-motion: reduce){.claim{animation:none}}
 .missions li.ok .st{color:var(--good)}
@@ -181,10 +183,10 @@ button{cursor:pointer}
 
 /* timer */
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--card);padding:6px 14px;font-size:13.5px;color:var(--soft);border-radius:999px}
+.chip{border:1px solid var(--line);background:var(--card);padding:6px 14px;min-height:38px;font-size:13.5px;color:var(--soft);border-radius:999px}
 .chip:disabled{opacity:.45;cursor:default}
 .chip[aria-pressed="true"]{border-color:var(--rose);background:var(--bowfill);color:var(--mauve)}
-.field{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:8px 2px;font-size:15px}
+.field{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:10px 2px;font-size:16px}
 .field::placeholder{color:var(--soft);opacity:.8}
 .stage{display:flex;flex-direction:column;align-items:center;padding-block:30px 20px}
 .oval{width:min(220px,62vw);aspect-ratio:3/4;max-width:100%;border-radius:50%;border:1px solid var(--line);background:var(--card);
@@ -224,15 +226,15 @@ button{cursor:pointer}
 .today-chart{margin-top:4px}
 .subedit{display:flex;gap:8px;margin-top:12px;align-items:flex-end}
 .subedit .field{flex:1;min-width:0}
-.addbtn{border:1px solid var(--rose);background:transparent;color:var(--mauve);padding:7px 14px;font-size:13.5px;flex-shrink:0}
+.addbtn{border:1px solid var(--rose);background:transparent;color:var(--mauve);padding:7px 14px;min-height:40px;font-size:13.5px;flex-shrink:0}
 .chipw{display:inline-flex;align-items:center}
 .chip .x{margin-left:6px;color:var(--warn);font-size:13px}
 .editlink{margin-left:auto;background:none;border:0;padding:0;font-family:var(--kr);font-size:12px;letter-spacing:0;text-transform:none;color:var(--soft);border-bottom:1px solid var(--line)}
 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .cmp div{padding:10px 4px;border:1px solid var(--line)}
 .cmp .k{font-size:12px;color:var(--soft)}
-.cmp .v{font-family:var(--kr);font-size:22px;color:var(--mauve);font-variant-numeric:tabular-nums lining-nums}
-.cmp .d{font-size:11.5px}
+.cmp .v{font-family:var(--kr);font-size:clamp(17px,5vw,22px);white-space:nowrap;color:var(--mauve);font-variant-numeric:tabular-nums lining-nums}
+.cmp .d{font-size:11.5px;line-height:1.45;word-break:keep-all}
 .up{color:var(--good)} .down{color:var(--warn)}
 
 /* breathing */
@@ -247,7 +249,7 @@ textarea.field{resize:vertical;min-height:64px;border:1px solid var(--line);padd
 .help{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line)}
 .help:last-child{border-bottom:0}
 .help b{font-family:var(--kr);font-size:22px;color:var(--mauve);font-weight:500;user-select:all}
-.copy{border:1px solid var(--line);background:transparent;font-size:12px;padding:4px 10px;color:var(--soft)}
+.copy{border:1px solid var(--line);background:transparent;font-size:12.5px;padding:8px 12px;color:var(--soft)}
 
 /* tab bar */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
@@ -260,6 +262,14 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
 .foot{font-family:var(--serif);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--soft);text-align:center;margin-top:28px}
 @media (prefers-reduced-motion: reduce){.bfill{transition:none!important}}
 
+
+/* mobile */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,label,input,select,textarea,.mood,.chip{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{-webkit-user-select:none;user-select:none}
+.btn:not(:disabled):active,.chip:not(:disabled):active,.mood:active,.claim:active,.addbtn:active{transform:scale(.97)}
+.field::placeholder{opacity:1}
+@media (max-width:360px){.card{padding-left:16px;padding-right:16px}.mood{font-size:11px}}
 /* opening + guide */
 .open{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .7s ease}
 .open.out{opacity:0;pointer-events:none}
@@ -321,14 +331,14 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
           <text id="ringPct" x="60" y="68" text-anchor="middle" font-size="26">0%</text>
         </svg>
         <div class="k">Total study time</div>
-        <div class="big num" id="goalDone">0분</div>
+        <div class="big num" id="goalDone">0m</div>
         <div class="muted" id="goalOf"></div>
         <div class="muted" id="goalWhy"></div>
         <button class="addbtn" type="button" id="goalEdit" style="margin-top:8px" aria-expanded="false">목표 시간 설정</button>
         <form class="goalform" id="goalForm" hidden>
           <label for="goalH" class="muted">평소 목표</label>
           <select id="goalH" class="sel"></select>
-          <select id="goalM" class="sel"><option value="0">0분</option><option value="30">30분</option></select>
+          <select id="goalM" class="sel"><option value="0">0m</option><option value="30">30m</option></select>
           <button class="btn" type="submit" style="padding:7px 16px">저장</button>
         </form>
       </div>
@@ -362,7 +372,7 @@ nav.tabs button[aria-current="page"] .e{opacity:1}
     <input class="field" id="task" placeholder="이 시간 안에 끝낼 일. 예: 기출 3문제 풀기" autocomplete="off">
     <p class="label" style="margin-top:18px">Set your time</p>
     <div class="presets" id="presets" role="group" aria-label="공부 시간 설정">
-      <label class="custom" for="customMin">직접 <input id="customMin" type="number" min="1" max="180" inputmode="numeric"> 분</label>
+      <label class="custom" for="customMin">직접 <input id="customMin" type="number" min="1" max="180" inputmode="numeric"> m</label>
     </div>
     <p class="promise" id="promise"></p>
     <div class="stage">
@@ -493,7 +503,7 @@ const WD=['일','월','화','수','목','금','토'];
 const dk=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const $=id=>document.getElementById(id);
-const fmtMin=m=>m>=60?Math.floor(m/60)+'시간'+(m%60?' '+(m%60)+'분':''):m+'분';
+const fmtMin=m=>{m=Math.round(m);const h=Math.floor(m/60),r=m%60;return h?h+'h'+(r?' '+r+'m':''):r+'m'};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const T=dk(new Date());
 const GR={S:{name:'천사날개토끼',how:'하루 총 공부 4시간 달성'},A:{name:'생크림딸기토끼',how:'40분 이상 타이머 완주'},B:{name:'딸기마카롱토끼',how:'25분 이상 타이머 완주'},C:{name:'딸기우유토끼',how:'10분 이상 타이머 완주'}};
@@ -582,10 +592,10 @@ function renderToday(){
   const b=burnoutText();$('burnout').hidden=!b;$('burnout').textContent=b;
   drawChart('chartToday');
   const list=S.sessions.filter(s=>s.date===T);
-  $('todayList').innerHTML=list.length?list.map(s=>`<li><span class="t">${esc(sessLabel(s))}${s.subject&&s.task?`<div class="sub">${esc(s.task)}</div>`:''}</span><span class="num">${s.done?`${s.min}분<span class="tag">완주</span>`:`${s.min}/${s.planned}분<span class="tag part">중간 종료</span>`}</span></li>`).join(''):'<li class="muted">아직 기록이 없어요. 짧은 타이머 하나로 시작해 봐요.</li>';
+  $('todayList').innerHTML=list.length?list.map(s=>`<li><span class="t">${esc(sessLabel(s))}${s.subject&&s.task?`<div class="sub">${esc(s.task)}</div>`:''}</span><span class="num">${s.done?`${fmtMin(s.min)}<span class="tag">완주</span>`:`${fmtMin(s.min)} / ${fmtMin(s.planned)}<span class="tag part">중간 종료</span>`}</span></li>`).join(''):'<li class="muted">아직 기록이 없어요. 짧은 타이머 하나로 시작해 봐요.</li>';
 }
 
-$('goalH').innerHTML=Array.from({length:13},(_,i)=>`<option value="${i}">${i}시간</option>`).join('');
+$('goalH').innerHTML=Array.from({length:13},(_,i)=>`<option value="${i}">${i}h</option>`).join('');
 $('goalEdit').onclick=()=>{const f=$('goalForm'),open=f.hidden;f.hidden=!open;$('goalEdit').setAttribute('aria-expanded',String(open));
   if(open){$('goalH').value=Math.floor(S.goal/60);$('goalM').value=S.goal%60>=30?30:0}};
 $('goalForm').onsubmit=e=>{e.preventDefault();const m=(+$('goalH').value)*60+(+$('goalM').value);
@@ -618,7 +628,7 @@ let plan=S.lastPlan||25,remain=plan*60000,endAt=0,running=false,started=false,ti
 function renderPresets(){
   const box=$('presets'),custom=box.querySelector('.custom');
   box.querySelectorAll('.chip').forEach(c=>c.remove());
-  PRESETS.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.m=m;b.textContent=m+'분';
+  PRESETS.forEach(m=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.m=m;b.textContent=fmtMin(m);
     b.setAttribute('aria-pressed',String(m===plan));b.disabled=started;box.insertBefore(b,custom)});
   $('customMin').value=PRESETS.includes(plan)?'':plan;$('customMin').disabled=started;
   $('promise').textContent=`${fmtMin(plan)} 안에 끝내기로 약속해요. 짧게 잡아도 괜찮아요.`;
@@ -653,7 +663,7 @@ $('finishBtn').onclick=()=>{
   const next=Math.max(5,Math.floor(m/5)*5);
   pending={date:T,subject,task:$('task').value.trim()||undefined,min:m,planned:plan,done:false};
   openSheet('Good try','여기까지 한 것도 충분해요',
-    `${fmtMin(plan)} 중 ${fmtMin(m)} 공부했어요. 다음엔 ${next}분처럼 끝까지 갈 수 있는 길이로 잡아 볼까요?`,
+    `${fmtMin(plan)} 중 ${fmtMin(m)} 공부했어요. 다음엔 ${fmtMin(next)}처럼 끝까지 갈 수 있는 길이로 잡아 볼까요?`,
     next<plan?next:0);
 };
 function complete(){
@@ -670,10 +680,10 @@ function chime(){
 function openSheet(l,t,sum,suggest){
   $('sheetL').textContent=l;$('sheetT').textContent=t;$('sheetSum').textContent=sum;
   {const g=pending&&pending.done&&gradeOf(pending.planned),tot=pending?minsOn(T)+pending.min>=240&&!S.claims['total:'+T]:false;
-   const msg=[g?(g==='D'?'1분 미션':`${g}등급 미션`):'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
+   const msg=[g?'타이머 미션':'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
    $('sheetArt').innerHTML=`<p class="muted" style="margin:0">${msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'타이머를 끝까지 채우면 리워드 미션이 완료돼요.'}</p>`;}
   $('saveSess').textContent='저장';
-  $('suggestBtn').hidden=!suggest;$('suggestBtn').dataset.m=suggest||'';$('suggestBtn').textContent=`다음엔 ${suggest}분`;
+  $('suggestBtn').hidden=!suggest;$('suggestBtn').dataset.m=suggest||'';$('suggestBtn').textContent=`다음엔 ${fmtMin(suggest)}`;
   $('scrim').hidden=false;
 }
 function resetTimer(){started=false;running=false;remain=plan*60000;clearInterval(tick);
@@ -710,11 +720,11 @@ function renderReport(){
   const [w1,w0]=weeks(),tot=w=>w.reduce((a,d)=>a+minsOn(d),0);
   const r1=rate(sessIn(w1)),r0=rate(sessIn(w0));
   const rows=[
-    ['공부',tot(w1)/60,tot(w0)/60,v=>v.toFixed(1)+'h',v=>v.toFixed(1)+'h'],
+    ['공부',tot(w1),tot(w0),v=>fmtMin(v),v=>(v<0?'-':'')+fmtMin(Math.abs(v))],
     ['컨디션',avg(w1.map(d=>S.moods[d])),avg(w0.map(d=>S.moods[d])),v=>v.toFixed(1),v=>v.toFixed(1)],
     ['완주율',r1==null?null:r1*100,r0==null?null:r0*100,v=>Math.round(v)+'%',v=>Math.round(v)+'%p']];
   $('cmp').innerHTML=rows.map(([k,a,b,f,fd])=>{const d=a!=null&&b!=null?a-b:null;
-    return `<div><div class="k">${k}</div><div class="v">${a==null?'–':f(a)}</div><div class="d ${d==null?'':d>=0?'up':'down'}">${d==null?'지난주 기록 없음':(d>=0?'+':'')+fd(d)+' 지난주 대비'}</div></div>`}).join('');
+    return `<div><div class="k">${k}</div><div class="v">${a==null?'–':f(a)}</div><div class="d ${d==null?'':d>=0?'up':'down'}">${d==null?'지난주 기록 없음':(d>=0?'+':'')+fd(d)+'<br>지난주 대비'}</div></div>`}).join('');
 
   const ins=[],b=burnoutText();if(b)ins.push(b);
   const all=[];for(let i=0;i<14;i++)all.push(dk(add(new Date(),-i)));
@@ -768,7 +778,7 @@ const MISSION={timer:{D:'C등급',C:'C등급',B:'B등급',A:'A등급'},total:'S�
 let lastRid=null;
 function claim(key){
   let g=null;const [k,v]=key.split(':');
-  if(k==='timer'){const ck='timer:'+v+':'+T;if(S.claims[ck]||!S.sessions.some(x=>x.date===T&&x.done&&gradeOf(x.planned)===v))return;S.claims[ck]=1;g=gradeR(v)}
+  if(k==='timer'){const ck='timer:'+v+':'+T,need={D:1,C:10,B:25,A:40}[v];if(S.claims[ck]||!need||!S.sessions.some(x=>x.date===T&&x.done&&x.planned>=need))return;S.claims[ck]=1;g=gradeR(v)}
   else if(k==='total'){if(minsOn(T)<240||S.claims['total:'+T])return;S.claims['total:'+T]=1;g='S'}
   else if(k==='restd'){if(!S.rests.includes(T)||S.claims['restd:'+T])return;S.claims['restd:'+T]=1;g=roll('daily')}
   else if(k==='rest'){const m=+v;if(S.rests.length<m||S.claims['rest:'+m])return;S.claims['rest:'+m]=1;g=roll(m)}
@@ -790,7 +800,7 @@ function renderMissions(){
   let h='<div class="mgroup">매일 미션 · 하루 한 번씩 받을 수 있어요</div><ul class="missions">';
   const best=Math.max(0,...S.sessions.filter(x=>x.date===T).map(x=>x.min));
   [['D','1분 타이머 완주',1],['C','10분 이상 타이머 완주',10],['B','25분 이상 타이머 완주',25],['A','40분 이상 타이머 완주',40]].forEach(([g,t,m])=>{
-    const td=S.sessions.some(x=>x.date===T&&x.done&&gradeOf(x.planned)===g),c=S.claims['timer:'+g+':'+T];
+    const td=S.sessions.some(x=>x.date===T&&x.done&&x.planned>=m),c=S.claims['timer:'+g+':'+T];
     h+=row(td,t,MISSION.timer[g],c?'받음':td?btn('timer:'+g,'받기'):Math.min(99,Math.round(best/m*100))+'%')});
   const tc=S.claims['total:'+T];
   h+=row(tot>=240,'하루 총 4시간 공부',MISSION.total,tc?'받음':tot>=240?btn('total','받기'):Math.min(99,Math.round(tot/240*100))+'%',tc||tot>=240?null:Math.min(100,Math.round(tot/240*100)));
