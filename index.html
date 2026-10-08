@@ -340,7 +340,7 @@ button{-webkit-user-select:none;user-select:none}
         <div class="muted" id="goalWhy"></div>
         <button class="addbtn" type="button" id="goalEdit" style="margin-top:8px" aria-expanded="false">목표 시간 설정</button>
         <form class="goalform" id="goalForm" hidden>
-          <label for="goalH" class="muted">평소 목표</label>
+          <label for="goalH" class="muted">오늘 목표</label>
           <select id="goalH" class="sel"></select>
           <select id="goalM" class="sel"><option value="0">0m</option><option value="30">30m</option></select>
           <button class="btn" type="submit" style="padding:7px 16px">저장</button>
@@ -556,6 +556,7 @@ function weeks(){const now=new Date(),w1=[],w0=[];for(let i=0;i<7;i++){w1.push(d
 
 /* tabs */
 function go(v){
+  if(v!=='mind'&&bTimer)stopBreath();
   document.querySelectorAll('[data-view]').forEach(s=>s.hidden=s.dataset.view!==v);
   document.querySelectorAll('[data-tab]').forEach(b=>b.dataset.tab===v?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));
   if(v==='report')renderReport();
@@ -579,17 +580,30 @@ function burnoutText(){
     return `이번 주 공부 시간은 지난주보다 ${Math.round((m1/m0-1)*100)}% 늘었는데, 컨디션은 계속 내려가고 있어요. 오늘은 가볍게 가도 괜찮아요.`;
   return '';
 }
+function goalFor(d){return (S.goals&&S.goals[d])||S.goal||240}
+function recText(mood){
+  if(!mood)return '컨디션을 고르면 오늘에 맞는 공부 시간을 추천해 드려요';
+  const past=[];for(let i=1;i<=14;i++)past.push(dk(add(new Date(),-i)));
+  const am=avg(past.map(d=>S.moods[d])),days=past.map(minsOn).filter(m=>m>0);
+  const avgMin=days.length?days.reduce((a,b)=>a+b,0)/days.length:null;
+  const r10=m=>Math.max(10,Math.round(m/10)*10);
+  if(avgMin==null)return mood<=2?'컨디션이 낮은 날이에요. 짧은 타이머부터 시작해 봐요':'좋아요. 오늘 목표를 향해 한 칸씩 가 봐요';
+  const low=am!=null?mood<=am-.5:mood<=2,high=am!=null&&mood>=am+.5;
+  if(low)return `평소보다 컨디션이 낮아요. 오늘은 ${fmtMin(r10(avgMin*RATE[mood]))} 정도를 추천해요`;
+  if(high)return `평소보다 컨디션이 좋아요. 최근 평균 ${fmtMin(r10(avgMin))}만큼 해 볼까요?`;
+  return `평소와 비슷한 컨디션이에요. 최근 평균은 ${fmtMin(r10(avgMin))}이에요`;
+}
 function sessLabel(s){return s.subject||s.task||'공부'}
 function renderToday(){
   $('sampleBanner').hidden=!S.sample;
   const mood=S.moods[T];
   $('moods').querySelectorAll('.mood').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===mood)));
   $('moodQ').textContent=mood?'오늘 컨디션을 기록했어요':'오늘 컨디션은 어때요?';
-  const goal=Math.round(S.goal*(mood?RATE[mood]:1)/10)*10;
+  const goal=goalFor(T);
   const done=minsOn(T),pct=Math.min(100,Math.round(done/goal*100));
   $('goalDone').textContent=fmtMin(done);
   $('goalOf').textContent='오늘 목표 '+fmtMin(goal);
-  $('goalWhy').textContent=!mood?'컨디션을 고르면 목표를 맞춰 드려요':RATE[mood]<1?`컨디션에 맞춰 평소 목표의 ${Math.round(RATE[mood]*100)}%로 줄였어요`:'평소 목표 그대로예요';
+  $('goalWhy').textContent=recText(mood);
   $('ringArc').setAttribute('stroke-dashoffset',(314.16*(1-pct/100)).toFixed(1));
   $('ringPct').textContent=pct+'%';
   const b=burnoutText();$('burnout').hidden=!b;$('burnout').textContent=b;
@@ -600,10 +614,10 @@ function renderToday(){
 
 $('goalH').innerHTML=Array.from({length:13},(_,i)=>`<option value="${i}">${i}h</option>`).join('');
 $('goalEdit').onclick=()=>{const f=$('goalForm'),open=f.hidden;f.hidden=!open;$('goalEdit').setAttribute('aria-expanded',String(open));
-  if(open){$('goalH').value=Math.floor(S.goal/60);$('goalM').value=S.goal%60>=30?30:0}};
+  if(open){const g=goalFor(T);$('goalH').value=Math.floor(g/60);$('goalM').value=g%60>=30?30:0}};
 $('goalForm').onsubmit=e=>{e.preventDefault();const m=(+$('goalH').value)*60+(+$('goalM').value);
   if(m<30){$('goalWhy').textContent='목표는 30분 이상으로 정해 주세요.';return}
-  S.goal=m;save();$('goalForm').hidden=true;$('goalEdit').setAttribute('aria-expanded','false');renderToday()};
+  if(!S.goals)S.goals={};S.goals[T]=m;S.goal=m;save();$('goalForm').hidden=true;$('goalEdit').setAttribute('aria-expanded','false');renderToday()};
 let armed=false;
 $('clearSample').onclick=function(){
   if(!armed){armed=true;this.textContent='정말 지울까요? 한 번 더 눌러요';return}
@@ -683,7 +697,7 @@ function chime(){
 function openSheet(l,t,sum,suggest){
   $('sheetL').textContent=l;$('sheetT').textContent=t;
   {const g=pending&&pending.done&&gradeOf(pending.planned),tot=pending?minsOn(T)+pending.min>=240&&!S.claims['total:'+T]:false;
-   const msg=[g?'타이머 미션':'',tot?'S등급 4시간 미션':''].filter(Boolean).join('과 ');
+   const msg=[g?'타이머 미션':'',tot?'4시간 미션':''].filter(Boolean).join('과 ');
    $('sheetSum').textContent=sum+' '+(msg?`저장하면 ${msg}을 완료해요. 리워드 탭에서 받을 수 있어요.`:'타이머를 끝까지 채우면 리워드 미션이 완료돼요.');$('sheetArt').innerHTML='';}
   $('saveSess').textContent='저장';
   $('suggestBtn').hidden=!suggest;$('suggestBtn').dataset.m=suggest||'';$('suggestBtn').textContent=`다음엔 ${fmtMin(suggest)}`;
@@ -741,22 +755,32 @@ function renderReport(){
   $('insights').innerHTML=ins.map(t=>`<li><span class="t">${t}</span></li>`).join('');
 }
 
-/* mind: breathing */
-let bTimer=null;
+/* mind: breathing (rAF-driven: 4s in, 4s hold, 6s out, seamless) */
+var bTimer=null,bRaf=0;
+const BMIN=.55,BMAX=1,BCYC=14,BTOTAL=BCYC*9;
+const eio=k=>.5-.5*Math.cos(Math.PI*k);
 $('bBtn').onclick=function(){
   if(bTimer){stopBreath();return}
-  const phases=[['들이쉬기',4,1],['멈추기',4,1],['내쉬기',6,.55]],end=Date.now()+120000;let p=0,lf=0;
   this.textContent='그만하기';
-  function step(){
-    const r=Math.ceil((end-Date.now())/1000);
-    if(r<=0){stopBreath();$('bword').textContent='잘했어요';$('bleft').textContent='몸이 조금 가벼워졌기를 바라요';onRest();return}
-    if(lf<=0){const [w,s,sc]=phases[p%3];$('bword').textContent=w;breathTo(sc,s);lf=s;p++}
-    $('bleft').textContent=`남은 시간 ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`;lf--;
-  }
-  step();bTimer=setInterval(step,1000);
+  const f=$('bfill');f.style.transition='none';
+  const st=performance.now();let lastW='',lastR=-1;bTimer=1;
+  const frame=now=>{
+    if(!bTimer)return;
+    const el=(now-st)/1000;
+    if(el>=BTOTAL){stopBreath();$('bword').textContent='잘했어요';$('bleft').textContent='몸이 조금 가벼워졌기를 바라요';onRest();return}
+    const c=el%BCYC;let w,sc;
+    if(c<4){w='들이쉬기';sc=BMIN+(BMAX-BMIN)*eio(c/4)}
+    else if(c<8){w='멈추기';sc=BMAX}
+    else{w='내쉬기';sc=BMAX-(BMAX-BMIN)*eio((c-8)/6)}
+    f.style.transform=`scale(${sc.toFixed(4)})`;
+    if(w!==lastW){$('bword').textContent=w;lastW=w}
+    const r=Math.ceil(BTOTAL-el);if(r!==lastR){$('bleft').textContent=`남은 시간 ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`;lastR=r}
+    bRaf=requestAnimationFrame(frame)};
+  bRaf=requestAnimationFrame(frame);
 };
 function breathTo(sc,sec){const f=$('bfill');f.style.transition=`transform ${sec}s cubic-bezier(.37,0,.63,1)`;f.style.transform=`scale(${sc})`}
-function stopBreath(){clearInterval(bTimer);bTimer=null;$('bBtn').textContent='호흡 시작';breathTo(.55,1.6);$('bword').textContent='준비';$('bleft').textContent='4초 들이쉬고, 4초 멈추고, 6초 내쉬어요'}
+function stopBreath(){cancelAnimationFrame(bRaf);bTimer=null;$('bBtn').textContent='호흡 시작';breathTo(BMIN,1.2);$('bword').textContent='준비';$('bleft').textContent='4초 들이쉬고, 4초 멈추고, 6초 내쉬어요'}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&bTimer)stopBreath()});
 
 /* mind: notes */
 $('noteForm').onsubmit=e=>{e.preventDefault();const t=$('noteText').value.trim();if(!t)return;
@@ -774,15 +798,15 @@ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
 });
 
 /* rabbits */
-const ODDS={1:{C:50,B:30,A:15,S:5},daily:{C:50,B:30,A:15,S:5},5:{C:20,B:40,A:30,S:10},10:{B:40,A:40,S:20},30:{A:50,S:50}};
-function roll(t){const o=ODDS[t];let x=Math.random()*100;for(const g of ['C','B','A','S']){if(!o[g])continue;if((x-=o[g])<0)return g}return 'S'}
+const ODDS={1:{C:60,B:30,A:9.9,S:.1},daily:{C:60,B:30,A:9.9,S:.1},5:{C:40,B:40,A:19.5,S:.5},10:{B:60,A:39.3,S:.7},30:{A:99,S:1},total:{A:95,S:5}};
+function roll(t){const o=ODDS[t];let x=Math.random()*100;for(const g of ['C','B','A','S']){if(!o[g])continue;if((x-=o[g])<0)return g}return Object.keys(o).sort((a,b)=>o[b]-o[a])[0]}
 function onRest(){S.rests.push(T);save();$('bleft').textContent='마음 휴식 미션을 완료했어요. 리워드 탭에서 받아요.'}
-const MISSION={timer:{D:'C등급',C:'C등급',B:'B등급',A:'A등급'},total:'S등급',1:'C~S등급 랜덤',5:'C~S등급 랜덤',10:'B~S등급 랜덤',30:'A~S등급 랜덤'};
+const MISSION={timer:{D:'C등급',C:'C등급',B:'B등급',A:'B등급'},total:'A~S등급 랜덤',1:'C~S등급 랜덤',5:'C~S등급 랜덤',10:'B~S등급 랜덤',30:'A~S등급 랜덤'};
 let lastRid=null;
 function claim(key){
   let g=null;const [k,v]=key.split(':');
-  if(k==='timer'){const ck='timer:'+v+':'+T,need={D:1,C:10,B:25,A:40}[v];if(S.claims[ck]||!need||!S.sessions.some(x=>x.date===T&&x.done&&x.planned>=need))return;S.claims[ck]=1;g=gradeR(v)}
-  else if(k==='total'){if(minsOn(T)<240||S.claims['total:'+T])return;S.claims['total:'+T]=1;g='S'}
+  if(k==='timer'){const ck='timer:'+v+':'+T,need={D:1,C:10,B:25,A:40}[v];if(S.claims[ck]||!need||!S.sessions.some(x=>x.date===T&&x.done&&x.planned>=need))return;S.claims[ck]=1;g={D:'C',C:'C',B:'B',A:'B'}[v]}
+  else if(k==='total'){if(minsOn(T)<240||S.claims['total:'+T])return;S.claims['total:'+T]=1;g=roll('total')}
   else if(k==='restd'){if(!S.rests.includes(T)||S.claims['restd:'+T])return;S.claims['restd:'+T]=1;g=roll('daily')}
   else if(k==='rest'){const m=+v;if(S.rests.length<m||S.claims['rest:'+m])return;S.claims['rest:'+m]=1;g=roll(m)}
   if(!g)return;
@@ -825,8 +849,8 @@ function renderRewards(){
 /* opening + first-run guide (tab tour with highlight bars) */
 {const op=$('open'),g=$('guide'),card=$('gCard'),f1=$('gF1'),f2=$('gF2');
   const steps=[
-  ['today','[data-view="today"] .card.striped','오늘 컨디션부터','오늘 상태를 먼저 골라 보세요.\n컨디션에 맞춰 하루 목표 시간이 알맞게 줄어들어요.'],
-  ['today','#goalEdit','하루 목표는 내 마음대로','목표 시간 설정에서 하루 목표를\n직접 정할 수 있어요.'],
+  ['today','[data-view="today"] .card.striped','오늘 컨디션부터','오늘 상태를 먼저 골라 보세요.\n컨디션과 최근 기록을 보고 오늘 공부 시간을 추천해 드려요.'],
+  ['today','#goalEdit','하루 목표는 내 마음대로','목표 시간 설정에서 오늘의 목표를\n날마다 직접 정할 수 있어요.'],
   ['timer','#presets','정한 시간 안에 끝내기','시간을 고르고 시작해요. 끝까지 채우면 완주,\n중간에 그만두면 다음엔 더 짧은 시간을 권해요.'],
   ['report','[data-view="report"] .card','한 주를 돌아보기','공부 시간과 컨디션이 그래프로 쌓여요.\n지난주와 비교해 패턴도 알려 드려요.'],
   ['mind','.breath','2분 호흡','마음이 복잡할 때 호흡 시작을 눌러\n원이 줄어드는 리듬에 맞춰 숨을 쉬어요.'],
